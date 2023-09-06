@@ -23,9 +23,11 @@ interface AlarmStructuredLocation {
 
 export interface Options {
   /** The start date of a recurring event's exception instance. Used for updating single event in a recurring series. */
-  exceptionDate: ISODateString;
+  exceptionDate?: ISODateString;
   /** iOS ONLY - If true the update will span all future events. If false it only update the single instance. */
   futureEvents?: boolean;
+  /** ANDROID ONLY - If true, can help avoid syncing issues */
+  sync?: boolean;
 }
 
 interface Alarm<D = ISODateString | number> {
@@ -87,6 +89,8 @@ interface CalendarEventBase {
   recurrence?: RecurrenceFrequency;
   /** The location associated with the calendar event. */
   location?: string;
+  /** iOS ONLY - The location with coordinates. */
+  structuredLocation?: AlarmStructuredLocation;
   /** iOS ONLY - Indicates whether an event is a detached instance of a repeating event. */
   isDetached?: boolean;
   /** iOS ONLY - The url associated with the calendar event. */
@@ -95,6 +99,8 @@ interface CalendarEventBase {
   notes?: string;
   /** ANDROID ONLY - The description associated with the calendar event. */
   description?: string;
+  /** iOS ONLY - The time zone associated with the event */
+  timeZone?: string;
 }
 
 export interface CalendarEventReadable extends CalendarEventBase {
@@ -167,12 +173,12 @@ export type CalendarAccountSourceAndroid =
 export default class ReactNativeCalendarEvents {
   /**
    * Get calendar authorization status.
-   * @param readOnly - optional, default false, use true to check for calendar read only vs calendar read/write. Android-specific, iOS is always read/write
+   * @param readOnly - optional, default false, use true to check for calendar read-only vs calendar read/write. Android-specific, iOS is always read/write
    */
   static checkPermissions(readOnly?: boolean): Promise<AuthorizationStatus>;
   /**
    * Request calendar authorization. Authorization must be granted before accessing calendar events.
-   * @param readOnly - optional, default false, use true to check for calendar read only vs calendar read/write. Android-specific, iOS is always read/write
+   * @param readOnly - optional, default false, use true to request for calendar read-only vs calendar read/write. Android-specific, iOS is always read/write
    */
   static requestPermissions(readOnly?: boolean): Promise<AuthorizationStatus>;
 

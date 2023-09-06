@@ -162,7 +162,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         WritableNativeMap result;
         Cursor cursor;
         ContentResolver cr = reactContext.getContentResolver();
-        Uri uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, Integer.parseInt(calendarID));
+        Uri uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, Long.parseLong(calendarID));
 
         String IS_PRIMARY = CalendarContract.Calendars.IS_PRIMARY == null ? "0" : CalendarContract.Calendars.IS_PRIMARY;
 
@@ -215,7 +215,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         return CalendarContract.Calendars.CAL_ACCESS_NONE;
     }
 
-    private int addCalendar(ReadableMap details) throws Exception, SecurityException {
+    private long addCalendar(ReadableMap details) throws Exception, SecurityException {
 
         ContentResolver cr = reactContext.getContentResolver();
         ContentValues calendarValues = new ContentValues();
@@ -272,7 +272,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         Uri calendarsUri = uriBuilder.build();
 
         Uri calendarUri = cr.insert(calendarsUri, calendarValues);
-        return Integer.parseInt(calendarUri.getLastPathSegment());
+        return Long.parseLong(calendarUri.getLastPathSegment());
     }
 
     private boolean removeCalendar(String calendarID) {
@@ -281,7 +281,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         try {
             ContentResolver cr = reactContext.getContentResolver();
 
-            Uri uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, (long) Integer.parseInt(calendarID));
+            Uri uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, Long.parseLong(calendarID));
             rows = cr.delete(uri, null, null);
 
         } catch (Exception e) {
@@ -355,8 +355,8 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
 
         Uri uri = uriBuilder.build();
 
-        String selection = "((" + CalendarContract.Instances.BEGIN + " >= " + eStartDate.getTimeInMillis() + ") " +
-                "AND (" + CalendarContract.Instances.END + " <= " + eEndDate.getTimeInMillis() + ") " +
+        String selection = "((" + CalendarContract.Instances.BEGIN + " < " + eEndDate.getTimeInMillis() + ") " +
+                "AND (" + CalendarContract.Instances.END + " >= " + eStartDate.getTimeInMillis() + ") " +
                 "AND (" + CalendarContract.Instances.VISIBLE + " = 1) " +
                 "AND (" + CalendarContract.Instances.STATUS + " IS NOT " + CalendarContract.Events.STATUS_CANCELED + ") ";
 
@@ -401,7 +401,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         WritableNativeMap result;
         Cursor cursor = null;
         ContentResolver cr = reactContext.getContentResolver();
-        Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, Integer.parseInt(eventID));
+        Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, Long.parseLong(eventID));
 
         String selection = "((" + CalendarContract.Events.DELETED + " != 1))";
 
@@ -472,7 +472,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         return result;
     }
 
-    private int addEvent(String title, ReadableMap details, ReadableMap options) throws ParseException {
+    private long addEvent(String title, ReadableMap details, ReadableMap options) throws ParseException {
         String dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
         boolean skipTimezone = false;
@@ -623,7 +623,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
         }
 
         if (details.hasKey("id")) {
-            int eventID = Integer.parseInt(details.getString("id"));
+            long eventID = Long.parseLong(details.getString("id"));
             WritableMap eventInstance = findEventById(details.getString("id"));
 
             if (eventInstance != null) {
@@ -654,7 +654,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                         throw e;
                     }
 
-                    Uri exceptionUri = Uri.withAppendedPath(CalendarContract.Events.CONTENT_EXCEPTION_URI, Integer.toString(eventID));
+                    Uri exceptionUri = Uri.withAppendedPath(CalendarContract.Events.CONTENT_EXCEPTION_URI, Long.toString(eventID));
 
                     if (options.hasKey("sync") && options.getBoolean("sync")) {
                         syncCalendar(cr, eventInstance.getMap("calendar").getString("id"));
@@ -664,7 +664,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                     try {
                         Uri eventUri = cr.insert(exceptionUri, eventValues);
                         if (eventUri != null) {
-                            eventID = Integer.parseInt(eventUri.getLastPathSegment());
+                            eventID = Long.parseLong(eventUri.getLastPathSegment());
                         }
                     } catch (Exception e) {
                         Log.d(this.getName(), "Event exception error", e);
@@ -673,24 +673,24 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
             }
 
             if (details.hasKey("alarms")) {
-                createRemindersForEvent(cr, Integer.parseInt(details.getString("id")), details.getArray("alarms"));
+                createRemindersForEvent(cr, Long.parseLong(details.getString("id")), details.getArray("alarms"));
             }
 
             if (details.hasKey("attendees")) {
-                createAttendeesForEvent(cr, Integer.parseInt(details.getString("id")), details.getArray("attendees"));
+                createAttendeesForEvent(cr, Long.parseLong(details.getString("id")), details.getArray("attendees"));
             }
 
             return eventID;
 
         } else {
             WritableNativeMap calendar;
-            int eventID = -1;
+            long eventID = -1;
 
             if (details.hasKey("calendarId")) {
                 calendar = findCalendarById(details.getString("calendarId"));
 
                 if (calendar != null) {
-                    eventValues.put(CalendarContract.Events.CALENDAR_ID, Integer.parseInt(calendar.getString("id")));
+                    eventValues.put(CalendarContract.Events.CALENDAR_ID, Long.parseLong(calendar.getString("id")));
                 } else {
                     eventValues.put(CalendarContract.Events.CALENDAR_ID, 1);
                 }
@@ -712,7 +712,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
             if (eventUri != null) {
                 String rowId = eventUri.getLastPathSegment();
                 if (rowId != null) {
-                    eventID = Integer.parseInt(rowId);
+                    eventID = Long.parseLong(rowId);
 
                     if (details.hasKey("alarms")) {
                         createRemindersForEvent(cr, eventID, details.getArray("alarms"));
@@ -739,7 +739,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
             ReadableMap eventCalendar = eventInstance.getMap("calendar");
 
             if (!options.hasKey("exceptionDate")) {
-                Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, (long) Integer.parseInt(eventID));
+                Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, Long.parseLong(eventID));
 
                 if (options.hasKey("sync") && options.getBoolean("sync")) {
                     syncCalendar(cr, eventCalendar.getString("id"));
@@ -810,7 +810,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
     //endregion
 
     //region Attendees
-    private void createAttendeesForEvent(ContentResolver resolver, int eventID, ReadableArray attendees) {
+    private void createAttendeesForEvent(ContentResolver resolver, long eventID, ReadableArray attendees) {
         Cursor cursor = CalendarContract.Attendees.query(resolver, eventID, new String[] {
                 CalendarContract.Attendees._ID
         });
@@ -842,7 +842,7 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
     //endregion
 
     //region Reminders
-    private void createRemindersForEvent(ContentResolver resolver, int eventID, ReadableArray reminders) {
+    private void createRemindersForEvent(ContentResolver resolver, long eventID, ReadableArray reminders) {
         Cursor cursor = null;
 
         if (resolver != null) {
@@ -1222,31 +1222,43 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
     //region React Native Methods
     @ReactMethod
     public void checkPermissions(boolean readOnly, Promise promise) {
-        SharedPreferences sharedPreferences = reactContext.getSharedPreferences(RNC_PREFS, ReactContext.MODE_PRIVATE);
-        boolean permissionRequested = sharedPreferences.getBoolean(getPermissionKey(readOnly), false);
+        try {
+            SharedPreferences sharedPreferences = reactContext.getSharedPreferences(RNC_PREFS, ReactContext.MODE_PRIVATE);
+            boolean permissionRequested = sharedPreferences.getBoolean(getPermissionKey(readOnly), false);
 
-        if (this.haveCalendarPermissions(readOnly)) {
-            promise.resolve("authorized");
-        } else if (!permissionRequested) {
-            promise.resolve("undetermined");
-        } else if(this.shouldShowRequestPermissionRationale(readOnly)) {
-            promise.resolve("denied"); 
-        } else {
-            promise.resolve("restricted");
+            if (this.haveCalendarPermissions(readOnly)) {
+                promise.resolve("authorized");
+            } else if (!permissionRequested) {
+                promise.resolve("undetermined");
+            } else if (this.shouldShowRequestPermissionRationale(readOnly)) {
+                promise.resolve("denied");
+            } else {
+                promise.resolve("restricted");
+            }
+        }
+        catch(Throwable t) {
+            Log.e("RNCalendarEvents error checking permissions", t.getMessage(), t);
+            promise.reject("error checking permissions", t.getMessage(), t);
         }
     }
 
     @ReactMethod
     public void requestPermissions(boolean readOnly, Promise promise) {
-        SharedPreferences sharedPreferences = reactContext.getSharedPreferences(RNC_PREFS, ReactContext.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(getPermissionKey(readOnly), true);
-        editor.apply();
+        try {
+            SharedPreferences sharedPreferences = reactContext.getSharedPreferences(RNC_PREFS, ReactContext.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(getPermissionKey(readOnly), true);
+            editor.apply();
 
-        if (this.haveCalendarPermissions(readOnly)) {
-            promise.resolve("authorized");
-        } else {
-            this.requestCalendarPermission(readOnly, promise);
+            if (this.haveCalendarPermissions(readOnly)) {
+                promise.resolve("authorized");
+            } else {
+                this.requestCalendarPermission(readOnly, promise);
+            }
+        }
+        catch(Throwable t) {
+            Log.e("RNCalendarEvents error requesting permissions", t.getMessage(), t);
+            promise.reject("error requesting permissions", t.getMessage(), t);
         }
     }
 
@@ -1257,13 +1269,19 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
-                        WritableArray calendars = findEventCalendars();
-                        promise.resolve(calendars);
+                        try {
+                            WritableArray calendars = findEventCalendars();
+                            promise.resolve(calendars);
+                        }
+                        catch(Throwable t) {
+                            Log.e("RNCalendarEvents calendar request error", t.getMessage(), t);
+                            promise.reject("calendar request error", t.getMessage(), t);
+                        }
                     }
                 });
                 thread.start();
-            } catch (Exception e) {
-                promise.reject("calendar request error", e.getMessage());
+            } catch (Throwable t) {
+                promise.reject("calendar request error", t.getMessage(), t);
             }
         } else {
             promise.reject("add event error", "you don't have permissions to retrieve an event to the users calendar");
@@ -1281,16 +1299,17 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 @Override
                 public void run() {
                     try {
-                        Integer calendarID = addCalendar(options);
+                        Long calendarID = addCalendar(options);
                         promise.resolve(calendarID.toString());
-                    } catch (Exception e) {
-                        promise.reject("save calendar error", e.getMessage());
+                    } catch (Throwable t) {
+                        Log.e("RNCalendarEvents save calendar error", t.getMessage(), t);
+                        promise.reject("save calendar error", t.getMessage(), t);
                     }
                 }
             });
             thread.start();
-        } catch (Exception e) {
-            promise.reject("save calendar error", "Calendar could not be saved", e);
+        } catch (Throwable t) {
+            promise.reject("save calendar error", "Calendar could not be saved", t);
         }
     }
 
@@ -1301,14 +1320,20 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
-                        boolean successful = removeCalendar(CalendarID);
-                        promise.resolve(successful);
+                        try {
+                            boolean successful = removeCalendar(CalendarID);
+                            promise.resolve(successful);
+                        }
+                        catch(Throwable t) {
+                            Log.e("RNCalendarEvents error removing calendar", t.getMessage(), t);
+                            promise.reject("error removing calendar", t.getMessage(), t);
+                        }
                     }
                 });
                 thread.start();
 
-            } catch (Exception e) {
-                promise.reject("error removing calendar", e.getMessage());
+            } catch (Throwable t) {
+                promise.reject("error removing calendar", t.getMessage(), t);
             }
         } else {
             promise.reject("remove calendar error", "you don't have permissions to remove a calendar");
@@ -1322,22 +1347,23 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
-                        int eventId;
+                        long eventId;
                         try {
                             eventId = addEvent(title, details, options);
                             if (eventId > -1) {
-                                promise.resolve(Integer.toString(eventId));
+                                promise.resolve(Long.toString(eventId));
                             } else {
                                 promise.reject("add event error", "Unable to save event");
                             }
-                        } catch (ParseException e) {
-                            promise.reject("add event error", e.getMessage());
+                        } catch (Throwable t) {
+                            Log.e("RNCalendarEvents add event error", t.getMessage(), t);
+                            promise.reject("add event error", t.getMessage(), t);
                         }
                     }
                 });
                 thread.start();
-            } catch (Exception e) {
-                promise.reject("add event error", e.getMessage());
+            } catch (Throwable t) {
+                promise.reject("add event error", t.getMessage(), t);
             }
         } else {
             promise.reject("add event error", "you don't have permissions to add an event to the users calendar");
@@ -1352,14 +1378,20 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
-                        WritableNativeArray results = findEvents(startDate, endDate, calendars);
-                        promise.resolve(results);
+                        try {
+                            WritableNativeArray results = findEvents(startDate, endDate, calendars);
+                            promise.resolve(results);
+                        }
+                        catch(Throwable t) {
+                            Log.e("RNCalendarEvents find event error", t.getMessage(), t);
+                            promise.reject("find event error", t.getMessage(), t);
+                        }
                     }
                 });
                 thread.start();
 
-            } catch (Exception e) {
-                promise.reject("find event error", e.getMessage());
+            } catch (Throwable t) {
+                promise.reject("find event error", t.getMessage(), t);
             }
         } else {
             promise.reject("find event error", "you don't have permissions to read an event from the users calendar");
@@ -1374,14 +1406,20 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
-                        WritableMap results = findEventById(eventID);
-                        promise.resolve(results);
+                        try {
+                            WritableMap results = findEventById(eventID);
+                            promise.resolve(results);
+                        }
+                        catch(Throwable t) {
+                            Log.e("RNCalendarEvents find event error", t.getMessage(), t);
+                            promise.reject("find event error", t.getMessage(), t);
+                        }
                     }
                 });
                 thread.start();
 
-            } catch (Exception e) {
-                promise.reject("find event error", e.getMessage());
+            } catch (Throwable t) {
+                promise.reject("find event error", t.getMessage(), t);
             }
         } else {
             promise.reject("find event error", "you don't have permissions to read an event from the users calendar");
@@ -1396,14 +1434,20 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
-                        boolean successful = removeEvent(eventID, options);
-                        promise.resolve(successful);
+                        try {
+                            boolean successful = removeEvent(eventID, options);
+                            promise.resolve(successful);
+                        }
+                        catch(Throwable t) {
+                            Log.e("RNCalendarEvents error removing event", t.getMessage(), t);
+                            promise.reject("error removing event", t.getMessage(), t);
+                        }
                     }
                 });
                 thread.start();
 
-            } catch (Exception e) {
-                promise.reject("error removing event", e.getMessage());
+            } catch (Throwable t) {
+                promise.reject("error removing event", t.getMessage(), t);
             }
         } else {
             promise.reject("remove event error", "you don't have permissions to remove an event from the users calendar");
@@ -1413,11 +1457,16 @@ public class RNCalendarEvents extends ReactContextBaseJavaModule implements Perm
 
     @ReactMethod
     public void openEventInCalendar(int eventID) {
-        Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID);
-        Intent sendIntent = new Intent(Intent.ACTION_VIEW).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).setData(uri);
+        try {
+            Uri uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID);
+            Intent sendIntent = new Intent(Intent.ACTION_VIEW).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).setData(uri);
 
-        if (sendIntent.resolveActivity(reactContext.getPackageManager()) != null) {
-            reactContext.startActivity(sendIntent);
+            if (sendIntent.resolveActivity(reactContext.getPackageManager()) != null) {
+                reactContext.startActivity(sendIntent);
+            }
+        }
+        catch(Throwable t) {
+            Log.e("RNCalendarEvents error opening event in calendar", t.getMessage(), t);
         }
     }
 

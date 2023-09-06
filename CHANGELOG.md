@@ -1,5 +1,24 @@
 # Changelog for `react-native-calendar-events`
 
+## 2.2.0 - 2021-01-08
+
+- Fixed `findEventByID` on iOS - return null if event is not found (_for consistency with Android_) [#337](https://github.com/wmcmahan/react-native-calendar-events/pull/337) by [@dstop75](https://github.com/dstop75)
+
+- Fixed android calendar query to catch events that intersect date range but aren't entirely a subset (_for consistency with iOS_) [#333](https://github.com/wmcmahan/react-native-calendar-events/pull/333) by [@jenniferburch](https://github.com/jenniferburch)
+
+- Added ability to set timezone on events in iOS (necessary for recurrence expansion to work correctly across daylight savings time transitions) [#335](https://github.com/wmcmahan/react-native-calendar-events/pull/335) by [@LorienHW](https://github.com/LorienHW) and [@mcarlson](https://github.com/mcarlson)
+
+Also includes minor documentation tweaks.
+
+## 2.1.2 - 2020-11-08
+
+- Fixed `exceptionDate` option being optional in TypeScript bindings [#329](https://github.com/wmcmahan/react-native-calendar-events/pull/329) by [@MoOx](https://github.com/MoOx)
+
+## 2.1.1 - 2020-10-20
+
+- Fixed TypeScript declaration in `package.json` file [#328](https://github.com/wmcmahan/react-native-calendar-events/pull/328) by [@wmcmahan](https://github.com/wmcmahan)
+- Fixed Android import into the README manual linking section [#321](https://github.com/wmcmahan/react-native-calendar-events/pull/321) by [@chiformihai](https://github.com/chiformihai)
+
 ## 2.1.0 - 2020-08-11
 
 - Added ability to restrict to read-only permission on Android [#320](https://github.com/wmcmahan/react-native-calendar-events/pull/320) by [@mikehardy](https://github.com/mikehardy)
